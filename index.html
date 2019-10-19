@@ -7,13 +7,236 @@
 	
 </head>
 <body>
-<div id="app"></div>
+<div id="app">
+
+	<div class="main">
+		<div>
+			<h1>{{article.title}}</h1>
+			<div><span>{{article.created_at}}</span></div>
+			<div v-html="article.content"></div>
+		</div>
+	</div>
+</div>
 </body>
 </html>
 <script>
 
 		var vm =new Vue({
 			el:"#app",
+			data:{
+				article:{
+					title:'几张图看明白VAO、VBO、EBO的关系和代码顺序',
+					created_at:'2018-12-12 12:23:34',
+					content:`<div id="cnblogs_post_body" class="blogpost-body ">
+    <p>0.详细教程可看<a href="https://learnopengl-cn.github.io/01%20Getting%20started/04%20Hello%20Triangle/" target="_blank">https://learnopengl-cn.github.io/01%20Getting%20started/04%20Hello%20Triangle/</a></p>
+<p>1.可以简单地认为VAO的作用是这样的：</p>
+<p>由于每渲染一次物体就要用一个VBO，而每次绑定一次VBO就要设置各个的顶点的属性，启动各个属性，代码十分复杂，复用性很差，因为每个物体的属性个数什么的都不一样（也就是说不是同构的），循环根本解决不了。所以就抽象出一层VAO来解决这个问题，相当于复用代码，使之简介快速。只在一开始将所有的VBO绑定对应的VAO就OK了，之后渲染的时候完全就可以绑定VAO，然后你就循环处理同构的VAO就好了。</p>
+<p>2.其实EBO的作用也可以简单地理解为复用跟减少冗余，貌似还可以节约内存跟缓存：</p>
+<p>否则的话VBO中储存大量的数据</p>
+<p>3.VAO中存储着VBO的信息和EBO的信息</p>
+<p><img src="static/1385732-20181018232107578-240359883.png" alt="" width="449" height="310"><img src="/static/image/1385732-20181018232128339-927981198.png" alt="" width="446" height="301"></p>
+<p>所以正确的绑定顺序是VAO、VBO、EBO,将后两者的信息也绑定进VAO中去啊</p>
+<p><img src="/image/1385732-20181018232329992-338668530.png" alt="" width="658" height="443"></p>
+<p><span style="background-color: #ffff00;">如果不适用VAO的话，那么最后一部分每次渲染都要设置第四部分的顶点属性，要好多行好多行，而用了VAO就一行绑定VAO就OK了啊，嘻嘻</span></p>
+<p>4.创建相同的两个三角形，但对它们的数据使用不同的VAO和VBO：</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('e62539ff-c637-4a37-a57d-69803556dda0')"><img id="code_img_closed_e62539ff-c637-4a37-a57d-69803556dda0" class="code_img_closed" src="https://images.cnblogs.com/OutliningIndicators/ContractedBlock.gif" alt=""><img id="code_img_opened_e62539ff-c637-4a37-a57d-69803556dda0" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('e62539ff-c637-4a37-a57d-69803556dda0',event)" src="https://images.cnblogs.com/OutliningIndicators/ExpandedBlockStart.gif" alt="">
+<div id="cnblogs_code_open_e62539ff-c637-4a37-a57d-69803556dda0" class="cnblogs_code_hide">
+<pre><span style="color: #008080;">  1</span> #include &lt;glad/glad.h&gt;
+<span style="color: #008080;">  2</span> #include &lt;GLFW/glfw3.h&gt;
+<span style="color: #008080;">  3</span> 
+<span style="color: #008080;">  4</span> #include &lt;iostream&gt;
+<span style="color: #008080;">  5</span> 
+<span style="color: #008080;">  6</span> <span style="color: #0000ff;">void</span> framebuffer_size_callback(GLFWwindow* window, <span style="color: #0000ff;">int</span> width, <span style="color: #0000ff;">int</span><span style="color: #000000;"> height);
+</span><span style="color: #008080;">  7</span> <span style="color: #0000ff;">void</span> processInput(GLFWwindow *<span style="color: #000000;">window);
+</span><span style="color: #008080;">  8</span> 
+<span style="color: #008080;">  9</span> <span style="color: #008000;">//</span><span style="color: #008000;"> settings</span>
+<span style="color: #008080;"> 10</span> <span style="color: #0000ff;">const</span> unsigned <span style="color: #0000ff;">int</span> SCR_WIDTH = <span style="color: #800080;">800</span><span style="color: #000000;">;
+</span><span style="color: #008080;"> 11</span> <span style="color: #0000ff;">const</span> unsigned <span style="color: #0000ff;">int</span> SCR_HEIGHT = <span style="color: #800080;">600</span><span style="color: #000000;">;
+</span><span style="color: #008080;"> 12</span> 
+<span style="color: #008080;"> 13</span> <span style="color: #0000ff;">const</span> <span style="color: #0000ff;">char</span> *vertexShaderSource = <span style="color: #800000;">"</span><span style="color: #800000;">#version 330 core\n</span><span style="color: #800000;">"</span>
+<span style="color: #008080;"> 14</span>     <span style="color: #800000;">"</span><span style="color: #800000;">layout (location = 0) in vec3 aPos;\n</span><span style="color: #800000;">"</span>
+<span style="color: #008080;"> 15</span>     <span style="color: #800000;">"</span><span style="color: #800000;">void main()\n</span><span style="color: #800000;">"</span>
+<span style="color: #008080;"> 16</span>     <span style="color: #800000;">"</span><span style="color: #800000;">{\n</span><span style="color: #800000;">"</span>
+<span style="color: #008080;"> 17</span>     <span style="color: #800000;">"</span><span style="color: #800000;">   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n</span><span style="color: #800000;">"</span>
+<span style="color: #008080;"> 18</span>     <span style="color: #800000;">"</span><span style="color: #800000;">}\0</span><span style="color: #800000;">"</span><span style="color: #000000;">;
+</span><span style="color: #008080;"> 19</span> <span style="color: #0000ff;">const</span> <span style="color: #0000ff;">char</span> *fragmentShaderSource = <span style="color: #800000;">"</span><span style="color: #800000;">#version 330 core\n</span><span style="color: #800000;">"</span>
+<span style="color: #008080;"> 20</span>     <span style="color: #800000;">"</span><span style="color: #800000;">out vec4 FragColor;\n</span><span style="color: #800000;">"</span>
+<span style="color: #008080;"> 21</span>     <span style="color: #800000;">"</span><span style="color: #800000;">void main()\n</span><span style="color: #800000;">"</span>
+<span style="color: #008080;"> 22</span>     <span style="color: #800000;">"</span><span style="color: #800000;">{\n</span><span style="color: #800000;">"</span>
+<span style="color: #008080;"> 23</span>     <span style="color: #800000;">"</span><span style="color: #800000;">   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n</span><span style="color: #800000;">"</span>
+<span style="color: #008080;"> 24</span>     <span style="color: #800000;">"</span><span style="color: #800000;">}\n\0</span><span style="color: #800000;">"</span><span style="color: #000000;">;
+</span><span style="color: #008080;"> 25</span> 
+<span style="color: #008080;"> 26</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> main()
+</span><span style="color: #008080;"> 27</span> <span style="color: #000000;">{
+</span><span style="color: #008080;"> 28</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> glfw: initialize and configure
+</span><span style="color: #008080;"> 29</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> ------------------------------</span>
+<span style="color: #008080;"> 30</span> <span style="color: #000000;">    glfwInit();
+</span><span style="color: #008080;"> 31</span>     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, <span style="color: #800080;">3</span><span style="color: #000000;">);
+</span><span style="color: #008080;"> 32</span>     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, <span style="color: #800080;">3</span><span style="color: #000000;">);
+</span><span style="color: #008080;"> 33</span> <span style="color: #000000;">    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+</span><span style="color: #008080;"> 34</span> 
+<span style="color: #008080;"> 35</span> <span style="color: #000000;">#ifdef __APPLE__
+</span><span style="color: #008080;"> 36</span>     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); <span style="color: #008000;">//</span><span style="color: #008000;"> uncomment this statement to fix compilation on OS X</span>
+<span style="color: #008080;"> 37</span> <span style="color: #0000ff;">#endif</span>
+<span style="color: #008080;"> 38</span> 
+<span style="color: #008080;"> 39</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> glfw window creation
+</span><span style="color: #008080;"> 40</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> --------------------</span>
+<span style="color: #008080;"> 41</span>     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, <span style="color: #800000;">"</span><span style="color: #800000;">LearnOpenGL</span><span style="color: #800000;">"</span><span style="color: #000000;">, NULL, NULL);
+</span><span style="color: #008080;"> 42</span>     <span style="color: #0000ff;">if</span> (window ==<span style="color: #000000;"> NULL)
+</span><span style="color: #008080;"> 43</span> <span style="color: #000000;">    {
+</span><span style="color: #008080;"> 44</span>         std::cout &lt;&lt; <span style="color: #800000;">"</span><span style="color: #800000;">Failed to create GLFW window</span><span style="color: #800000;">"</span> &lt;&lt;<span style="color: #000000;"> std::endl;
+</span><span style="color: #008080;"> 45</span> <span style="color: #000000;">        glfwTerminate();
+</span><span style="color: #008080;"> 46</span>         <span style="color: #0000ff;">return</span> -<span style="color: #800080;">1</span><span style="color: #000000;">;
+</span><span style="color: #008080;"> 47</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;"> 48</span> <span style="color: #000000;">    glfwMakeContextCurrent(window);
+</span><span style="color: #008080;"> 49</span> <span style="color: #000000;">    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+</span><span style="color: #008080;"> 50</span> 
+<span style="color: #008080;"> 51</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> glad: load all OpenGL function pointers
+</span><span style="color: #008080;"> 52</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> ---------------------------------------</span>
+<span style="color: #008080;"> 53</span>     <span style="color: #0000ff;">if</span> (!<span style="color: #000000;">gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+</span><span style="color: #008080;"> 54</span> <span style="color: #000000;">    {
+</span><span style="color: #008080;"> 55</span>         std::cout &lt;&lt; <span style="color: #800000;">"</span><span style="color: #800000;">Failed to initialize GLAD</span><span style="color: #800000;">"</span> &lt;&lt;<span style="color: #000000;"> std::endl;
+</span><span style="color: #008080;"> 56</span>         <span style="color: #0000ff;">return</span> -<span style="color: #800080;">1</span><span style="color: #000000;">;
+</span><span style="color: #008080;"> 57</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;"> 58</span> 
+<span style="color: #008080;"> 59</span> 
+<span style="color: #008080;"> 60</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> build and compile our shader program
+</span><span style="color: #008080;"> 61</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> ------------------------------------
+</span><span style="color: #008080;"> 62</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> vertex shader</span>
+<span style="color: #008080;"> 63</span>     <span style="color: #0000ff;">int</span> vertexShader =<span style="color: #000000;"> glCreateShader(GL_VERTEX_SHADER);
+</span><span style="color: #008080;"> 64</span>     glShaderSource(vertexShader, <span style="color: #800080;">1</span>, &amp;<span style="color: #000000;">vertexShaderSource, NULL);
+</span><span style="color: #008080;"> 65</span> <span style="color: #000000;">    glCompileShader(vertexShader);
+</span><span style="color: #008080;"> 66</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> check for shader compile errors</span>
+<span style="color: #008080;"> 67</span>     <span style="color: #0000ff;">int</span><span style="color: #000000;"> success;
+</span><span style="color: #008080;"> 68</span>     <span style="color: #0000ff;">char</span> infoLog[<span style="color: #800080;">512</span><span style="color: #000000;">];
+</span><span style="color: #008080;"> 69</span>     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &amp;<span style="color: #000000;">success);
+</span><span style="color: #008080;"> 70</span>     <span style="color: #0000ff;">if</span> (!<span style="color: #000000;">success)
+</span><span style="color: #008080;"> 71</span> <span style="color: #000000;">    {
+</span><span style="color: #008080;"> 72</span>         glGetShaderInfoLog(vertexShader, <span style="color: #800080;">512</span><span style="color: #000000;">, NULL, infoLog);
+</span><span style="color: #008080;"> 73</span>         std::cout &lt;&lt; <span style="color: #800000;">"</span><span style="color: #800000;">ERROR::SHADER::VERTEX::COMPILATION_FAILED\n</span><span style="color: #800000;">"</span> &lt;&lt; infoLog &lt;&lt;<span style="color: #000000;"> std::endl;
+</span><span style="color: #008080;"> 74</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;"> 75</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> fragment shader</span>
+<span style="color: #008080;"> 76</span>     <span style="color: #0000ff;">int</span> fragmentShader =<span style="color: #000000;"> glCreateShader(GL_FRAGMENT_SHADER);
+</span><span style="color: #008080;"> 77</span>     glShaderSource(fragmentShader, <span style="color: #800080;">1</span>, &amp;<span style="color: #000000;">fragmentShaderSource, NULL);
+</span><span style="color: #008080;"> 78</span> <span style="color: #000000;">    glCompileShader(fragmentShader);
+</span><span style="color: #008080;"> 79</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> check for shader compile errors</span>
+<span style="color: #008080;"> 80</span>     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &amp;<span style="color: #000000;">success);
+</span><span style="color: #008080;"> 81</span>     <span style="color: #0000ff;">if</span> (!<span style="color: #000000;">success)
+</span><span style="color: #008080;"> 82</span> <span style="color: #000000;">    {
+</span><span style="color: #008080;"> 83</span>         glGetShaderInfoLog(fragmentShader, <span style="color: #800080;">512</span><span style="color: #000000;">, NULL, infoLog);
+</span><span style="color: #008080;"> 84</span>         std::cout &lt;&lt; <span style="color: #800000;">"</span><span style="color: #800000;">ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n</span><span style="color: #800000;">"</span> &lt;&lt; infoLog &lt;&lt;<span style="color: #000000;"> std::endl;
+</span><span style="color: #008080;"> 85</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;"> 86</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> link shaders</span>
+<span style="color: #008080;"> 87</span>     <span style="color: #0000ff;">int</span> shaderProgram =<span style="color: #000000;"> glCreateProgram();
+</span><span style="color: #008080;"> 88</span> <span style="color: #000000;">    glAttachShader(shaderProgram, vertexShader);
+</span><span style="color: #008080;"> 89</span> <span style="color: #000000;">    glAttachShader(shaderProgram, fragmentShader);
+</span><span style="color: #008080;"> 90</span> <span style="color: #000000;">    glLinkProgram(shaderProgram);
+</span><span style="color: #008080;"> 91</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> check for linking errors</span>
+<span style="color: #008080;"> 92</span>     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &amp;<span style="color: #000000;">success);
+</span><span style="color: #008080;"> 93</span>     <span style="color: #0000ff;">if</span> (!<span style="color: #000000;">success) {
+</span><span style="color: #008080;"> 94</span>         glGetProgramInfoLog(shaderProgram, <span style="color: #800080;">512</span><span style="color: #000000;">, NULL, infoLog);
+</span><span style="color: #008080;"> 95</span>         std::cout &lt;&lt; <span style="color: #800000;">"</span><span style="color: #800000;">ERROR::SHADER::PROGRAM::LINKING_FAILED\n</span><span style="color: #800000;">"</span> &lt;&lt; infoLog &lt;&lt;<span style="color: #000000;"> std::endl;
+</span><span style="color: #008080;"> 96</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;"> 97</span> <span style="color: #000000;">    glDeleteShader(vertexShader);
+</span><span style="color: #008080;"> 98</span> <span style="color: #000000;">    glDeleteShader(fragmentShader);
+</span><span style="color: #008080;"> 99</span> 
+<span style="color: #008080;">100</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> set up vertex data (and buffer(s)) and configure vertex attributes
+</span><span style="color: #008080;">101</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> ------------------------------------------------------------------</span>
+<span style="color: #008080;">102</span>     <span style="color: #0000ff;">float</span> firstTriangle[] =<span style="color: #000000;"> {
+</span><span style="color: #008080;">103</span>         -<span style="color: #800080;">0.9f</span>, -<span style="color: #800080;">0.5f</span>, <span style="color: #800080;">0.0f</span>,  <span style="color: #008000;">//</span><span style="color: #008000;"> left </span>
+<span style="color: #008080;">104</span>         -<span style="color: #800080;">0.0f</span>, -<span style="color: #800080;">0.5f</span>, <span style="color: #800080;">0.0f</span>,  <span style="color: #008000;">//</span><span style="color: #008000;"> right</span>
+<span style="color: #008080;">105</span>         -<span style="color: #800080;">0.45f</span>, <span style="color: #800080;">0.5f</span>, <span style="color: #800080;">0.0f</span>,  <span style="color: #008000;">//</span><span style="color: #008000;"> top </span>
+<span style="color: #008080;">106</span> <span style="color: #000000;">    };
+</span><span style="color: #008080;">107</span>     <span style="color: #0000ff;">float</span> secondTriangle[] =<span style="color: #000000;"> {
+</span><span style="color: #008080;">108</span>         <span style="color: #800080;">0.0f</span>, -<span style="color: #800080;">0.5f</span>, <span style="color: #800080;">0.0f</span>,  <span style="color: #008000;">//</span><span style="color: #008000;"> left</span>
+<span style="color: #008080;">109</span>         <span style="color: #800080;">0.9f</span>, -<span style="color: #800080;">0.5f</span>, <span style="color: #800080;">0.0f</span>,  <span style="color: #008000;">//</span><span style="color: #008000;"> right</span>
+<span style="color: #008080;">110</span>         <span style="color: #800080;">0.45f</span>, <span style="color: #800080;">0.5f</span>, <span style="color: #800080;">0.0f</span>   <span style="color: #008000;">//</span><span style="color: #008000;"> top </span>
+<span style="color: #008080;">111</span> <span style="color: #000000;">    };
+</span><span style="color: #008080;">112</span>     unsigned <span style="color: #0000ff;">int</span> VBOs[<span style="color: #800080;">2</span>], VAOs[<span style="color: #800080;">2</span><span style="color: #000000;">];
+</span><span style="color: #008080;">113</span>     glGenVertexArrays(<span style="color: #800080;">2</span>, VAOs); <span style="color: #008000;">//</span><span style="color: #008000;"> we can also generate multiple VAOs or buffers at the same time</span>
+<span style="color: #008080;">114</span>     glGenBuffers(<span style="color: #800080;">2</span><span style="color: #000000;">, VBOs);
+</span><span style="color: #008080;">115</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> first triangle setup
+</span><span style="color: #008080;">116</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> --------------------</span>
+<span style="color: #008080;">117</span>     glBindVertexArray(VAOs[<span style="color: #800080;">0</span><span style="color: #000000;">]);
+</span><span style="color: #008080;">118</span>     glBindBuffer(GL_ARRAY_BUFFER, VBOs[<span style="color: #800080;">0</span><span style="color: #000000;">]);
+</span><span style="color: #008080;">119</span>     glBufferData(GL_ARRAY_BUFFER, <span style="color: #0000ff;">sizeof</span><span style="color: #000000;">(firstTriangle), firstTriangle, GL_STATIC_DRAW);
+</span><span style="color: #008080;">120</span>     glVertexAttribPointer(<span style="color: #800080;">0</span>, <span style="color: #800080;">3</span>, GL_FLOAT, GL_FALSE, <span style="color: #800080;">3</span> * <span style="color: #0000ff;">sizeof</span>(<span style="color: #0000ff;">float</span>), (<span style="color: #0000ff;">void</span>*)<span style="color: #800080;">0</span>);    <span style="color: #008000;">//</span><span style="color: #008000;"> Vertex attributes stay the same</span>
+<span style="color: #008080;">121</span>     glEnableVertexAttribArray(<span style="color: #800080;">0</span><span style="color: #000000;">);
+</span><span style="color: #008080;">122</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> glBindVertexArray(0); </span><span style="color: #008000;">//</span><span style="color: #008000;"> no need to unbind at all as we directly bind a different VAO the next few lines
+</span><span style="color: #008080;">123</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> second triangle setup
+</span><span style="color: #008080;">124</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> ---------------------</span>
+<span style="color: #008080;">125</span>     glBindVertexArray(VAOs[<span style="color: #800080;">1</span>]);    <span style="color: #008000;">//</span><span style="color: #008000;"> note that we bind to a different VAO now</span>
+<span style="color: #008080;">126</span>     glBindBuffer(GL_ARRAY_BUFFER, VBOs[<span style="color: #800080;">1</span>]);    <span style="color: #008000;">//</span><span style="color: #008000;"> and a different VBO</span>
+<span style="color: #008080;">127</span>     glBufferData(GL_ARRAY_BUFFER, <span style="color: #0000ff;">sizeof</span><span style="color: #000000;">(secondTriangle), secondTriangle, GL_STATIC_DRAW);
+</span><span style="color: #008080;">128</span>     glVertexAttribPointer(<span style="color: #800080;">0</span>, <span style="color: #800080;">3</span>, GL_FLOAT, GL_FALSE, <span style="color: #800080;">0</span>, (<span style="color: #0000ff;">void</span>*)<span style="color: #800080;">0</span>); <span style="color: #008000;">//</span><span style="color: #008000;"> because the vertex data is tightly packed we can also specify 0 as the vertex attribute's stride to let OpenGL figure it out</span>
+<span style="color: #008080;">129</span>     glEnableVertexAttribArray(<span style="color: #800080;">0</span><span style="color: #000000;">);
+</span><span style="color: #008080;">130</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> glBindVertexArray(0); </span><span style="color: #008000;">//</span><span style="color: #008000;"> not really necessary as well, but beware of calls that could affect VAOs while this one is bound (like binding element buffer objects, or enabling/disabling vertex attributes)
+</span><span style="color: #008080;">131</span> 
+<span style="color: #008080;">132</span> 
+<span style="color: #008080;">133</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> uncomment this call to draw in wireframe polygons.
+</span><span style="color: #008080;">134</span>     <span style="color: #008000;">//</span><span style="color: #008000;">glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+</span><span style="color: #008080;">135</span> 
+<span style="color: #008080;">136</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> render loop
+</span><span style="color: #008080;">137</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> -----------</span>
+<span style="color: #008080;">138</span>     <span style="color: #0000ff;">while</span> (!<span style="color: #000000;">glfwWindowShouldClose(window))
+</span><span style="color: #008080;">139</span> <span style="color: #000000;">    {
+</span><span style="color: #008080;">140</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> input
+</span><span style="color: #008080;">141</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> -----</span>
+<span style="color: #008080;">142</span> <span style="color: #000000;">        processInput(window);
+</span><span style="color: #008080;">143</span> 
+<span style="color: #008080;">144</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> render
+</span><span style="color: #008080;">145</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> ------</span>
+<span style="color: #008080;">146</span>         glClearColor(<span style="color: #800080;">0.2f</span>, <span style="color: #800080;">0.3f</span>, <span style="color: #800080;">0.3f</span>, <span style="color: #800080;">1.0f</span><span style="color: #000000;">);
+</span><span style="color: #008080;">147</span> <span style="color: #000000;">        glClear(GL_COLOR_BUFFER_BIT);
+</span><span style="color: #008080;">148</span> 
+<span style="color: #008080;">149</span> <span style="color: #000000;">        glUseProgram(shaderProgram);
+</span><span style="color: #008080;">150</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> draw first triangle using the data from the first VAO</span>
+<span style="color: #008080;">151</span>         glBindVertexArray(VAOs[<span style="color: #800080;">0</span><span style="color: #000000;">]);
+</span><span style="color: #008080;">152</span>         glDrawArrays(GL_TRIANGLES, <span style="color: #800080;">0</span>, <span style="color: #800080;">3</span><span style="color: #000000;">);
+</span><span style="color: #008080;">153</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> then we draw the second triangle using the data from the second VAO</span>
+<span style="color: #008080;">154</span>         glBindVertexArray(VAOs[<span style="color: #800080;">1</span><span style="color: #000000;">]);
+</span><span style="color: #008080;">155</span>         glDrawArrays(GL_TRIANGLES, <span style="color: #800080;">0</span>, <span style="color: #800080;">3</span><span style="color: #000000;">);
+</span><span style="color: #008080;">156</span>  
+<span style="color: #008080;">157</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+</span><span style="color: #008080;">158</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> -------------------------------------------------------------------------------</span>
+<span style="color: #008080;">159</span> <span style="color: #000000;">        glfwSwapBuffers(window);
+</span><span style="color: #008080;">160</span> <span style="color: #000000;">        glfwPollEvents();
+</span><span style="color: #008080;">161</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">162</span> 
+<span style="color: #008080;">163</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> optional: de-allocate all resources once they've outlived their purpose:
+</span><span style="color: #008080;">164</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> ------------------------------------------------------------------------</span>
+<span style="color: #008080;">165</span>     glDeleteVertexArrays(<span style="color: #800080;">2</span><span style="color: #000000;">, VAOs);
+</span><span style="color: #008080;">166</span>     glDeleteBuffers(<span style="color: #800080;">2</span><span style="color: #000000;">, VBOs);
+</span><span style="color: #008080;">167</span> 
+<span style="color: #008080;">168</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> glfw: terminate, clearing all previously allocated GLFW resources.
+</span><span style="color: #008080;">169</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> ------------------------------------------------------------------</span>
+<span style="color: #008080;">170</span> <span style="color: #000000;">    glfwTerminate();
+</span><span style="color: #008080;">171</span>     <span style="color: #0000ff;">return</span> <span style="color: #800080;">0</span><span style="color: #000000;">;
+</span><span style="color: #008080;">172</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">173</span> 
+<span style="color: #008080;">174</span> <span style="color: #008000;">//</span><span style="color: #008000;"> process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
+</span><span style="color: #008080;">175</span> <span style="color: #008000;">//</span><span style="color: #008000;"> ---------------------------------------------------------------------------------------------------------</span>
+<span style="color: #008080;">176</span> <span style="color: #0000ff;">void</span> processInput(GLFWwindow *<span style="color: #000000;">window)
+</span><span style="color: #008080;">177</span> <span style="color: #000000;">{
+</span><span style="color: #008080;">178</span>     <span style="color: #0000ff;">if</span> (glfwGetKey(window, GLFW_KEY_ESCAPE) ==<span style="color: #000000;"> GLFW_PRESS)
+</span><span style="color: #008080;">179</span>         glfwSetWindowShouldClose(window, <span style="color: #0000ff;">true</span><span style="color: #000000;">);
+</span><span style="color: #008080;">180</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">181</span> 
+<span style="color: #008080;">182</span> <span style="color: #008000;">//</span><span style="color: #008000;"> glfw: whenever the window size changed (by OS or user resize) this callback function executes
+</span><span style="color: #008080;">183</span> <span style="color: #008000;">//</span><span style="color: #008000;"> ---------------------------------------------------------------------------------------------</span>
+<span style="color: #008080;">184</span> <span style="color: #0000ff;">void</span> framebuffer_size_callback(GLFWwindow* window, <span style="color: #0000ff;">int</span> width, <span style="color: #0000ff;">int</span><span style="color: #000000;"> height)
+</span><span style="color: #008080;">185</span> <span style="color: #000000;">{
+</span><span style="color: #008080;">186</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> make sure the viewport matches the new window dimensions; note that width and 
+</span><span style="color: #008080;">187</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> height will be significantly larger than specified on retina displays.</span>
+<span style="color: #008080;">188</span>     glViewport(<span style="color: #800080;">0</span>, <span style="color: #800080;">0</span><span style="color: #000000;">, width, height);
+</span><span style="color: #008080;">189</span> }</pre>
+</div>
+<span class="cnblogs_code_collapse">View Code</span></div>
+<p>&nbsp;</p>
+</div>`
+
+				}
+			}
 		});
 		console.log(vm);
 	</script>
