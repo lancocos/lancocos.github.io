@@ -34,9 +34,9 @@
 <p>2.其实EBO的作用也可以简单地理解为复用跟减少冗余，貌似还可以节约内存跟缓存：</p>
 <p>否则的话VBO中储存大量的数据</p>
 <p>3.VAO中存储着VBO的信息和EBO的信息</p>
-<p><img src="static/1385732-20181018232107578-240359883.png" alt="" width="449" height="310"><img src="/static/image/1385732-20181018232128339-927981198.png" alt="" width="446" height="301"></p>
+<p><img src="/static/iamge/1385732-20181018232107578-240359883.png" alt="" width="449" height="310"><img src="/static/image/1385732-20181018232128339-927981198.png" alt="" width="446" height="301"></p>
 <p>所以正确的绑定顺序是VAO、VBO、EBO,将后两者的信息也绑定进VAO中去啊</p>
-<p><img src="/image/1385732-20181018232329992-338668530.png" alt="" width="658" height="443"></p>
+<p><img src="/static/image/1385732-20181018232329992-338668530.png" alt="" width="658" height="443"></p>
 <p><span style="background-color: #ffff00;">如果不适用VAO的话，那么最后一部分每次渲染都要设置第四部分的顶点属性，要好多行好多行，而用了VAO就一行绑定VAO就OK了啊，嘻嘻</span></p>
 <p>4.创建相同的两个三角形，但对它们的数据使用不同的VAO和VBO：</p>
 <div class="cnblogs_code" onclick="cnblogs_code_show('e62539ff-c637-4a37-a57d-69803556dda0')"><img id="code_img_closed_e62539ff-c637-4a37-a57d-69803556dda0" class="code_img_closed" src="https://images.cnblogs.com/OutliningIndicators/ContractedBlock.gif" alt=""><img id="code_img_opened_e62539ff-c637-4a37-a57d-69803556dda0" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('e62539ff-c637-4a37-a57d-69803556dda0',event)" src="https://images.cnblogs.com/OutliningIndicators/ExpandedBlockStart.gif" alt="">
